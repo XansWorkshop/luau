@@ -28,11 +28,10 @@ LUAU_FASTINT(LuauTypeInferRecursionLimit)
 LUAU_FASTFLAGVARIABLE(DebugLuauMagicVariableNames)
 LUAU_FASTFLAGVARIABLE(LuauAutocompleteDotMethodConversion)
 LUAU_FASTFLAG(LuauExportValueSyntax)
-LUAU_FASTFLAGVARIABLE(LuauCheckTypeForDeprecated)
-LUAU_FLAGVERSION(LuauCheckTypeForDeprecated, 2)
 LUAU_FASTFLAGVARIABLE(LuauUseExplicitTypeArgsInGenerics)
 LUAU_FASTFLAG(LuauExperimentalIfLocalSyntax)
 LUAU_FASTFLAG(LuauRefactorAutocompleteAncestry)
+LUAU_FASTFLAG(DebugLuauWhileLocalSyntax)
 
 static constexpr std::array<std::string_view, 13> kStatementStartingKeywords =
     {"while", "if", "local", "repeat", "function", "do", "for", "return", "break", "continue", "type", "export", "const"};
@@ -278,7 +277,6 @@ static TypeCorrectKind checkTypeCorrectKind(
 
 static bool isTypeDeprecated(TypeId ty)
 {
-    LUAU_ASSERT(FFlag::LuauCheckTypeForDeprecated);
     ty = follow(ty);
 
     auto check = [](auto candidate)
@@ -563,7 +561,7 @@ static void autocompleteProps(
                 result[name] = AutocompleteEntry{
                     AutocompleteEntryKind::Property,
                     type,
-                    prop.deprecated || (FFlag::LuauCheckTypeForDeprecated && isTypeDeprecated(type)),
+                    prop.deprecated || isTypeDeprecated(type),
                     wrong,
                     typeCorrect,
                     containingExternType,
@@ -1513,7 +1511,7 @@ static AutocompleteEntryMap autocompleteStatement(
                 result[n] = {
                     AutocompleteEntryKind::Binding,
                     binding.typeId,
-                    binding.deprecated || (FFlag::LuauCheckTypeForDeprecated && isTypeDeprecated(binding.typeId)),
+                    binding.deprecated || isTypeDeprecated(binding.typeId),
                     false,
                     TypeCorrectKind::None,
                     std::nullopt,
@@ -1611,8 +1609,7 @@ static bool autocompleteIfElseExpression(
     {
         if (const AstExprIfElse* selfIfElse = node->as<AstExprIfElse>())
         {
-            if (selfIfElse->conditionLocal && selfIfElse->conditionEqualsLocation &&
-                    position >= selfIfElse->conditionEqualsLocation->end)
+            if (selfIfElse->conditionLocal && selfIfElse->conditionEqualsLocation && position >= selfIfElse->conditionEqualsLocation->end)
                 return false;
             // Don't try to complete when the current node is an if-else expression (i.e. only try to complete when the node is a child of an if-else
             // expression).
@@ -1633,8 +1630,8 @@ static bool autocompleteIfElseExpression(
 
     if (FFlag::LuauExperimentalIfLocalSyntax)
     {
-        if (ifElseExpr && ifElseExpr->conditionLocal && ifElseExpr->conditionEqualsLocation &&
-            position >= ifElseExpr->conditionEqualsLocation->end && !ifElseExpr->hasThen)
+        if (ifElseExpr && ifElseExpr->conditionLocal && ifElseExpr->conditionEqualsLocation && position >= ifElseExpr->conditionEqualsLocation->end &&
+            !ifElseExpr->hasThen)
             return false;
     }
 
@@ -1719,7 +1716,7 @@ static AutocompleteContext autocompleteExpression(
                     result[n] = {
                         AutocompleteEntryKind::Binding,
                         binding.typeId,
-                        binding.deprecated || (FFlag::LuauCheckTypeForDeprecated && isTypeDeprecated(binding.typeId)),
+                        binding.deprecated || isTypeDeprecated(binding.typeId),
                         false,
                         typeCorrect,
                         std::nullopt,
@@ -2298,6 +2295,12 @@ AutocompleteResult autocomplete_(
     }
     else if (AstStatIf* statIf = node->as<AstStatIf>(); FFlag::LuauExperimentalIfLocalSyntax && statIf && statIf->conditionLocal &&
                                                         statIf->conditionEqualsLocation && position >= statIf->conditionEqualsLocation->end)
+    {
+        return autocompleteExpression(*module, builtinTypes, typeArena, ancestry, scopeAtPosition, position);
+    }
+    else if (AstStatWhile* statWhile = node->as<AstStatWhile>();
+             FFlag::DebugLuauWhileLocalSyntax && statWhile && statWhile->conditionLocal && statWhile->conditionEqualsLocation &&
+             position >= statWhile->conditionEqualsLocation->end && (!statWhile->hasDo || position < statWhile->doLocation.begin))
     {
         return autocompleteExpression(*module, builtinTypes, typeArena, ancestry, scopeAtPosition, position);
     }
