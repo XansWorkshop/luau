@@ -169,6 +169,7 @@ LUA_API const char* lua_typename(lua_State* L, int tp);
 LUA_API int lua_equal(lua_State* L, int idx1, int idx2);
 LUA_API int lua_rawequal(lua_State* L, int idx1, int idx2);
 LUA_API int lua_lessthan(lua_State* L, int idx1, int idx2);
+LUA_API int xan_lessequal(lua_State* L, int idx1, int idx2);
 
 LUA_API double lua_tonumberx(lua_State* L, int idx, int* isnum);
 LUA_API int lua_tointegerx(lua_State* L, int idx, int* isnum);

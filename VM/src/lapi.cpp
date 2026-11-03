@@ -411,6 +411,17 @@ int lua_lessthan(lua_State* L, int index1, int index2)
     return i;
 }
 
+int xan_lessequal(lua_State* L, int index1, int index2)
+{
+    StkId o1, o2;
+    int i;
+    o1 = index2addr(L, index1);
+    o2 = index2addr(L, index2);
+    i = (o1 == luaO_nilobject || o2 == luaO_nilobject) ? 0 : luaV_lessequal(L, o1, o2);
+    return i;
+}
+
+
 double lua_tonumberx(lua_State* L, int idx, int* isnum)
 {
     TValue n;
@@ -2295,4 +2306,54 @@ void lua_userdatadirectfield_setnil(void* result)
 {
     TValue* slot = LUA_VECTOR_DOUBLE ? static_cast<DirectFieldResult*>(result)->slot : static_cast<TValue*>(result);
     setnilvalue(slot);
+}
+
+// Xan's Bullshittery
+
+LUALIB_API int xan_getFunctionName(lua_State* L, int idx, char* result, signed int maxLength)
+{
+    luaC_checkGC(L);
+    luaC_threadbarrier(L);
+
+    StkId o = index2addr(L, idx);
+    api_check(L, isLfunction(o));
+    Closure* cl = clvalue(o);
+    const char* readResult = NULL;
+    if (cl)
+    {
+        if (cl->isC)
+        {
+            if (TString* str = cl->c.debugname)
+            {
+                readResult = getstr(str);   
+            }
+        }
+        else
+        {
+            Proto* p = cl->l.p;
+
+            if (p->debugname)
+            {
+                readResult = getstr(p->debugname);
+            }
+        }
+    }
+    if (readResult)
+    {
+        int length = strlen(readResult);
+        if (length < maxLength)
+        {
+            maxLength = length;
+        }
+
+        if (maxLength >= 0)
+        {
+            for (int i = 0; i < maxLength; ++i)
+            {
+                result[i] = readResult[i];
+            }
+            return maxLength;
+        }
+    }
+    return 0;
 }

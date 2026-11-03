@@ -439,6 +439,9 @@ target_sources(Luau.VM PRIVATE
     VM/src/ludata.h
     VM/src/lvector.h
     VM/src/lvm.h
+
+    VM/include/xanslua.h
+    VM/src/xanslua.cpp
 )
 
 target_sources(isocline PRIVATE

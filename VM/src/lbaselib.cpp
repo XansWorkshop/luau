@@ -8,6 +8,8 @@
 #include "lgc.h"
 #include "ludata.h"
 
+#include "xanslua.h"
+
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,9 +17,16 @@
 LUAU_FASTFLAGVARIABLE(LuauFastpcall)
 LUAU_FASTFLAGVARIABLE(LuauPcallOptimize)
 
-static void writestring(const char* s, size_t l)
+static void writestring(lua_State* L, const char* s, size_t l)
 {
-    fwrite(s, 1, l, stdout);
+    if (writeStringReceiver)
+    {
+        writeStringReceiver(L, s, l);
+    }
+    else
+    {
+        fwrite(s, 1, l, stdout);
+    }
 }
 
 static int luaB_print(lua_State* L)
@@ -28,11 +37,15 @@ static int luaB_print(lua_State* L)
         size_t l;
         const char* s = luaL_tolstring(L, i, &l); // convert to string using __tostring et al
         if (i > 1)
-            writestring("\t", 1);
-        writestring(s, l);
+            writestring(L, "\t", 1);
+        writestring(L, s, l);
         lua_pop(L, 1); // pop result
     }
-    writestring("\n", 1);
+    writestring(L, "\n", 1);
+    if (writeStringReceiver)
+    {
+        writeStringReceiver(L, nullptr, -1); // LMFAO
+    }
     return 0;
 }
 
@@ -93,8 +106,19 @@ static int luaB_getmetatable(lua_State* L)
         lua_pushnil(L);
         return 1; // no metatable
     }
-    luaL_getmetafield(L, 1, "__metatable");
-    return 1; // returns either __metatable field (if present) or metatable
+
+    // Added by Xan:
+    if (luaL_getmetafield(L, 1, "__xan_metatable_hidden"))
+    {
+        lua_pop(L, 1); // get the field off of the stack
+        lua_pushnil(L);
+        return 1; // We want it to *look* like no metatable
+    }
+    else
+    {
+        luaL_getmetafield(L, 1, "__metatable");
+        return 1; // returns either __metatable field (if present) or metatable
+    }
 }
 
 static int luaB_setmetatable(lua_State* L)
@@ -102,8 +126,19 @@ static int luaB_setmetatable(lua_State* L)
     int t = lua_type(L, 2);
     luaL_checktype(L, 1, LUA_TTABLE);
     luaL_argexpected(L, t == LUA_TNIL || t == LUA_TTABLE, 2, "nil or table");
-    if (luaL_getmetafield(L, 1, "__metatable"))
+
+    // Added by Xan:
+    if (luaL_getmetafield(L, 1, "__xan_metatable_hidden"))
+    {
+        // In this case, we want to fail because the metatable is actively hidden.
+        // It should still behave as if there is one, though.
+        lua_pop(L, 1); // get the field off of the stack
+        luaL_error(L, "cannot change an immutable metatable");
+    }
+    else if (luaL_getmetafield(L, 1, "__metatable"))
+    {
         luaL_error(L, "cannot change a protected metatable");
+    }
     lua_settop(L, 2);
     lua_setmetatable(L, 1);
     return 1;

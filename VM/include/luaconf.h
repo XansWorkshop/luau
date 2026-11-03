@@ -68,7 +68,7 @@
 
 // LUA_IDSIZE gives the maximum size for the description of the source
 #ifndef LUA_IDSIZE
-#define LUA_IDSIZE 256
+#define LUA_IDSIZE 512
 #endif
 
 // LUA_MINSTACK is the initial number of reserved stack slots for a C function
@@ -98,12 +98,12 @@
 
 // number of valid Lua userdata tags
 #ifndef LUA_UTAG_LIMIT
-#define LUA_UTAG_LIMIT 128
+#define LUA_UTAG_LIMIT 4096 // Normally 128, increased dramatically by Xan due to using so many tags.
 #endif
 
 // number of valid Lua lightuserdata tags
 #ifndef LUA_LUTAG_LIMIT
-#define LUA_LUTAG_LIMIT 128
+#define LUA_LUTAG_LIMIT 4096 // Normally 128, increased dramatically by Xan due to using so many tags.
 #endif
 
 // upper bound for number of size classes used by page allocator
@@ -134,7 +134,7 @@
 // }==================================================================
 
 #ifndef LUA_VECTOR_SIZE
-#define LUA_VECTOR_SIZE 3 // must be 3 or 4
+#define LUA_VECTOR_SIZE 4 // must be 3 or 4
 #endif
 
 #ifndef LUA_VECTOR_DOUBLE
