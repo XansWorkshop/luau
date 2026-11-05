@@ -68,7 +68,7 @@
 
 // LUA_IDSIZE gives the maximum size for the description of the source
 #ifndef LUA_IDSIZE
-#define LUA_IDSIZE 512
+#define LUA_IDSIZE 1024
 #endif
 
 // LUA_MINSTACK is the initial number of reserved stack slots for a C function
