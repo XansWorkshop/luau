@@ -8,8 +8,6 @@
 #include "lgc.h"
 #include "ludata.h"
 
-#include "xanslua.h"
-
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,14 +16,7 @@ LUAU_FASTFLAGVARIABLE(LuauFastpcall)
 
 static void writestring(lua_State* L, const char* s, size_t l)
 {
-    if (writeStringReceiver)
-    {
-        writeStringReceiver(L, s, l);
-    }
-    else
-    {
-        fwrite(s, 1, l, stdout);
-    }
+    fwrite(s, 1, l, stdout);
 }
 
 static int luaB_print(lua_State* L)
@@ -41,10 +32,6 @@ static int luaB_print(lua_State* L)
         lua_pop(L, 1); // pop result
     }
     writestring(L, "\n", 1);
-    if (writeStringReceiver)
-    {
-        writeStringReceiver(L, nullptr, -1); // LMFAO
-    }
     return 0;
 }
 
