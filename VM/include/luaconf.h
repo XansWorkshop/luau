@@ -98,12 +98,12 @@
 
 // number of valid Lua userdata tags
 #ifndef LUA_UTAG_LIMIT
-#define LUA_UTAG_LIMIT 4096 // Normally 128, increased dramatically by Xan due to using so many tags.
+#define LUA_UTAG_LIMIT 128
 #endif
 
 // number of valid Lua lightuserdata tags
 #ifndef LUA_LUTAG_LIMIT
-#define LUA_LUTAG_LIMIT 4096 // Normally 128, increased dramatically by Xan due to using so many tags.
+#define LUA_LUTAG_LIMIT 128
 #endif
 
 // upper bound for number of size classes used by page allocator
