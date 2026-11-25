@@ -8,6 +8,8 @@
 #include "lgc.h"
 #include "ludata.h"
 
+#include "xanslua.h"
+
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
