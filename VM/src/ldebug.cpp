@@ -356,21 +356,11 @@ static void pusherror(lua_State* L, const char* msg)
     CallInfo* ci = L->ci;
     if (isLua(ci))
     {
-        Proto* p = getluaproto(ci);
-        TString* source = p->source;
-
+        TString* source = getluaproto(ci)->source;
         char chunkbuf[LUA_IDSIZE]; // add file:line information
         const char* chunkid = luaO_chunkid(chunkbuf, sizeof(chunkbuf), getstr(source), source->len);
         int line = currentline(L, ci);
-        if (p->debugname)
-        {
-            const char* funcName = getstr(p->debugname);
-            luaO_pushfstring(L, "[FAIL] %s::%s:%d: %s", chunkid, funcName, line, msg);
-        }
-        else
-        {
-            luaO_pushfstring(L, "[FAIL] %s:%d: %s", chunkid, line, msg);
-        }
+        luaO_pushfstring(L, "%s:%d: %s", chunkid, line, msg);
     }
     else
     {
