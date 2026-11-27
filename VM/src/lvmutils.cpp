@@ -35,6 +35,21 @@ const TValue* luaV_tonumber(const TValue* obj, TValue* n)
         return NULL;
 }
 
+// Added by Xan:
+const TValue* luaV_tointeger64(const TValue* obj, TValue* n)
+{
+    int64_t num;
+    if (ttisinteger(obj))
+        return obj;
+    if (ttisstring(obj) && luaO_str2l(svalue(obj), &num))
+    {
+        setlvalue(n, num);
+        return n;
+    }
+    else
+        return NULL;
+}
+
 int luaV_tostring(lua_State* L, StkId obj)
 {
     if (!ttisnumber(obj))
@@ -662,6 +677,43 @@ void luaV_doarithimpl(lua_State* L, StkId ra, const TValue* rb, const TValue* rc
             break;
         case TM_UNM:
             setnvalue(ra, luai_numunm(nb));
+            break;
+        default:
+            LUAU_ASSERT(0);
+            break;
+        }
+    }
+    // Added by Xan
+    else if ((b = luaV_tointeger64(rb, &tempb)) != NULL && (c = luaV_tointeger64(rc, &tempc)) != NULL)
+    {
+        int64_t lb = lvalue(b), lc = lvalue(c);
+
+        switch (op)
+        {
+        case TM_ADD:
+            setlvalue(ra, luai_numadd(lb, lc));
+            break;
+        case TM_SUB:
+            setlvalue(ra, luai_numsub(lb, lc));
+            break;
+        case TM_MUL:
+            setlvalue(ra, luai_nummul(lb, lc));
+            break;
+        case TM_DIV:
+            setlvalue(ra, luai_numdiv(lb, lc));
+            break;
+        case TM_IDIV:
+            // This is kind of bad...
+            setlvalue(ra, static_cast<int64_t>(luai_numidiv(static_cast<double>(lb), static_cast<double>(lc))));
+            break;
+        case TM_MOD:
+            setlvalue(ra, lb % lc);
+            break;
+        case TM_POW:
+            setlvalue(ra, luai_numpow(lb, lc));
+            break;
+        case TM_UNM:
+            setlvalue(ra, luai_numunm(lb));
             break;
         default:
             LUAU_ASSERT(0);

@@ -21,6 +21,8 @@ void luaV_doarithimpl(lua_State* L, StkId ra, const TValue* rb, const TValue* rc
 
 LUAI_FUNC void luaV_dolen(lua_State* L, StkId ra, const TValue* rb);
 LUAI_FUNC const TValue* luaV_tonumber(const TValue* obj, TValue* n);
+// Added by Xan:
+LUAI_FUNC const TValue* luaV_tointeger64(const TValue* obj, TValue* n);
 LUAI_FUNC const LUA_VECTOR_TYPE* luaV_tovector(const TValue* obj);
 LUAI_FUNC int luaV_tostring(lua_State* L, StkId obj);
 LUAI_FUNC void luaV_gettable(lua_State* L, const TValue* t, TValue* key, StkId val);
